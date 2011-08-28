@@ -66,7 +66,7 @@ public class TestDiscount_offers {
 		customers = data.get("customers");
 		products = data.get("products");
 		
-		assertEquals(43.5f, d.calculateScore(customers, products));
+		assertEquals(41.5f, d.calculateScore(customers, products));
 	}
 	
 	@Test
