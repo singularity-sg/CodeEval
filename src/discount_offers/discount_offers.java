@@ -9,13 +9,16 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class discount_offers {
 	
-//	private static Map<String, Float> scorecache = new HashMap<String,Float>();
+	private static NumberFormat nf = NumberFormat.getInstance();
+	
+	{
+		nf.setMinimumFractionDigits(2);
+	}
 
 	public static void main(String[] args) throws Exception {
 		
@@ -44,13 +47,14 @@ public class discount_offers {
 	
 	private void process(String line) throws Exception {
 		
+		System.out.println(line);
+		
 		Map<String, List<String>> data = splitRecord(line);
 		
 		List<String> customers = data.get("customers");
 		List<String> products = data.get("products");
 		
-		NumberFormat nf = NumberFormat.getInstance();
-		nf.setMinimumFractionDigits(2);
+		
 		System.out.println(nf.format(calculateScore(customers, products)));
 	}
 	
@@ -118,16 +122,35 @@ public class discount_offers {
 		
 		Float[][] finalTable = truncate(scoreTable);
 		
-//		System.out.println("-----Truncated Table-----");
-//		
-//		for (int i = 0; i < finalTable.length; i++) {
-//			System.out.println(Arrays.toString(finalTable[i]));
-//		}
+		System.out.println("-----Truncated Table-----");
+		
+		for (int i = 0; i < finalTable.length; i++) {
+			for (int j=0; j < finalTable[i].length; j++) {
+				System.out.print(pad(nf.format(finalTable[i][j]),7));
+			}
+			System.out.print("\n");
+		}
 		
 		Float score = subdivide(finalTable);
 		
-		System.out.println("Time -> " + (System.currentTimeMillis() - time) + ", Loops -> " + loops);				
+//		System.out.println("Time -> " + (System.currentTimeMillis() - time) + ", Loops -> " + loops);				
 		return score;
+	}
+	
+	private String pad(String val, int padSize) {
+		
+		int len = val.length();
+		
+		if( len > padSize) {
+			return val;
+		} else {
+			StringBuilder s = new StringBuilder(val);
+			int pad = padSize - len;
+			for (int i = 0; i < pad; i++) {
+				s.append(" ");
+			}
+			return s.toString();
+		}
 	}
 	
 	private Float subdivide(Float[][] table) {
@@ -197,9 +220,10 @@ public class discount_offers {
 						subpart[x][y] = workingTable[x_idx+x][y_idx+y];
 					}
 				}
-				
+
 				Float score = subdivide(subpart);
 				finalScore[i][j] = score;
+			
 			}
 		}
 		
