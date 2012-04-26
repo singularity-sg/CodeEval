@@ -11,8 +11,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 public class discount_offers {
+	
+	private static Map<String, Float> memoized = new HashMap<String, Float>();
 	
 	private static NumberFormat nf = NumberFormat.getInstance();
 	
@@ -60,268 +63,46 @@ public class discount_offers {
 	
 	
 	Float calculateScore(List<String> customers, List<String> products) {
-		
-		long time = System.currentTimeMillis();
-		long loops = 0;
-		
-		String[] customersArr = customers.toArray(new String[customers.size()]);
-		String[] productsArr =  products.toArray(new String[products.size()]);
-		
-		Float[][] scoreTable = null, transScoreTable = null;
 
-		
-		scoreTable = new Float[customersArr.length][productsArr.length];
-		
-		for(int i=0,len=customersArr.length;i<len;i++) {
-			for(int j=0,jlen=productsArr.length;j<jlen;j++) {
-				scoreTable[i][j] = calculateScoreForOne(customersArr[i], productsArr[j]);	
-			}
-		}
-		
-//		System.out.println("-----Before Sort-----");
-//		
-//		for (int i = 0; i < scoreTable.length; i++) {
-//			System.out.println(Arrays.toString(scoreTable[i]));
-//		}
-		
-		for (int i = 0; i < scoreTable.length; i++) {
-			Arrays.sort(scoreTable[i]);
-		}
-		
-//		System.out.println("-----After Sort-----");
-//		
-//		for (int i = 0; i < scoreTable.length; i++) {
-//			System.out.println(Arrays.toString(scoreTable[i]));
-//		}
-
-		transScoreTable = transverse(scoreTable);
-	
-//		System.out.println("-----After Transverse-----");
-//		
-//		for (int i = 0; i < transScoreTable.length; i++) {
-//			System.out.println(Arrays.toString(transScoreTable[i]));
-//		}
-		
-		for (int i = 0; i < transScoreTable.length; i++) {
-			Arrays.sort(transScoreTable[i]);
-		}
-		
-//		System.out.println("-----After Transverse Sort-----");
-//		
-//		for (int i = 0; i < transScoreTable.length; i++) {
-//			System.out.println(Arrays.toString(transScoreTable[i]));
-//		}
-		
-		scoreTable = transverse(transScoreTable);
-		
-//		System.out.println("-----Sorted Table-----");
-//		
-//		for (int i = 0; i < scoreTable.length; i++) {
-//			System.out.println(Arrays.toString(scoreTable[i]));
-//		}
-		
-		Float[][] finalTable = truncate(scoreTable);
-		
-		System.out.println("-----Truncated Table-----");
-		
-		for (int i = 0; i < finalTable.length; i++) {
-			for (int j=0; j < finalTable[i].length; j++) {
-				System.out.print(pad(nf.format(finalTable[i][j]),7));
-			}
-			System.out.print("\n");
-		}
-		
-		Float score = subdivide(finalTable);
-		
-//		System.out.println("Time -> " + (System.currentTimeMillis() - time) + ", Loops -> " + loops);				
-		return score;
-	}
-	
-	private String pad(String val, int padSize) {
-		
-		int len = val.length();
-		
-		if( len > padSize) {
-			return val;
-		} else {
-			StringBuilder s = new StringBuilder(val);
-			int pad = padSize - len;
-			for (int i = 0; i < pad; i++) {
-				s.append(" ");
-			}
-			return s.toString();
-		}
-	}
-	
-	private Float subdivide(Float[][] table) {
-		
-		int len = table.length;
-		int workingLen = len;
-		Float[][] workingTable = table.clone();
-		
-		if(len == 2) {
-			
-			Float highestTotal = 0f;
-			List<int[]> perm = new ArrayList<int[]>();
-			
-			perm2(new int[]{0,1}, perm);
-			
-			for (int[] p : perm) {
-				Float total = 0f;
-				
-				for(int i=0;i<len;i++) {
-					total += workingTable[i][p[i]];
-				}
-				
-				if(total > highestTotal) {
-					highestTotal = total;
-				}
-			}
-			
-//			System.out.println("----- Working Table -----");
-//			for (int i = 0; i < workingTable.length; i++) {
-//				System.out.println(Arrays.toString(workingTable[i]));
-//			}
-//			System.out.println("----- Total: " + highestTotal + "-----");
-						
-			return highestTotal;
-		}
-		
-		if(len > 2 && len%2 != 0) {
-			workingLen = len+1;
-			workingTable = new Float[workingLen][workingLen];
-			for(int i=0;i<len;i++) {
-				for(int j=0;j<len;j++) {
-					workingTable[i][j] = table[i][j];
-				}
-			}
-			
-			for (int i = 0; i < len; i++) {
-				workingTable[i][len] = Float.valueOf(0f); 
-			}
-			Float[] tmp = workingTable[len];
-			Arrays.fill(tmp, Float.valueOf(0f));
-
-		} 
-		
-		workingLen /= 2;
-		
-		Float[][] finalScore = new Float[2][2];
-		
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				
-				Float[][] subpart = new Float[workingLen][workingLen];
-				int x_idx = i * workingLen;
-				int y_idx = j * workingLen;
-						
-				for(int x=0; x<workingLen; x++) {
-					for(int y=0; y<workingLen; y++) {
-						subpart[x][y] = workingTable[x_idx+x][y_idx+y];
-					}
-				}
-
-				Float score = subdivide(subpart);
-				finalScore[i][j] = score;
-			
-			}
-		}
-		
-		Float highestTotal = finalScore[0][0] + finalScore[1][1];
-		
-		return highestTotal;
-		
-	}
-	
-	private Float[][] truncate(Float[][] scoreTable) {
-		int height = scoreTable.length;
-		int length = scoreTable[0].length;
-		
-		Float[][] newTable = null;
-		
-		if(height > length) {
-			
-			newTable = new Float[length][length];
-			
-			for(int i=0,x=height-1; i<length; i++, x--) {
-				
-				for(int j=0,y=length-1; j<length; j++, y--) {
-					
-						newTable[i][j] = scoreTable[x][y];
-					
-				}
-				
-			}
-			
-		} else {
-			
-			newTable = new Float[height][height];
-			
-			for(int i=0,x=height-1; i<height; i++, x--) {
-				
-				for(int j=0,y=length-1; j<height; j++, y--) {
-					
-						newTable[i][j] = scoreTable[x][y];
-					
-				}
-				
-			}
-		}
-		
-		return newTable;
-		
-	}	
-
-	private Float[][] transverse(Float[][] scoreTable) {
-		
-		Float[][] newMatrix = new Float[scoreTable[0].length][scoreTable.length];
-		
-		for (int i = 0; i < newMatrix.length; i++) {
-			for (int j = 0; j < newMatrix[0].length; j++) {
-				newMatrix[i][j] = scoreTable[j][i];
-			}
-		}
-		
-		return newMatrix;
-	}
-
-	// print N! permutation of the elements of array a (not in order)
-    public static void perm2(int[] s, List<int[]> results) {
-       int N = s.length;
-       int[] a = new int[N];
-       for (int i = 0; i < N; i++)
-           a[i] = s[i];
-       perm2(a, N, results);
-    }
-    
-    private static Map<String, int[]> cache = new HashMap<String, int[]>();
-
-    private static void perm2(int[] a, int n, List<int[]> results) {
-        if (n == 1) {
-        	String key = Arrays.toString(a);
-        	if(cache.containsKey(key)) {
-        		results.add(cache.get(key));
-        	} else {
-        		int[] tmp = a.clone();
-        		cache.put(key, tmp);
-        		results.add(tmp);
-        	}
-            
-            return;
+        float score = 0.0f;
+        
+        TreeSet<String> set = new TreeSet<String>();
+        set.addAll(customers);
+        set.addAll(products);
+        
+        Float calcScore = memoized.get(set.toString());
+        if(calcScore != null) {
+        	return calcScore;
         }
-        for (int i = 0; i < n; i++) {
-            swap(a, i, n-1);
-            perm2(a, n-1, results);
-            swap(a, i, n-1);
+
+        for(String customer : customers) {
+
+            List<String> remainingCustomers = new ArrayList<String>();
+            remainingCustomers.addAll(customers);
+            remainingCustomers.remove(customer);
+
+            for(String product : products) {
+                List<String> remainingProducts = new ArrayList<String>();
+                remainingProducts.addAll(products);
+                remainingProducts.remove(product);
+
+                Float myscore = memoized.get(customer+","+product);
+                float curScore = 0.0f;
+                if(myscore == null) {
+                	myscore = calculateScoreForOne(customer, product);
+                	memoized.put(customer+","+product, myscore);
+                }
+                curScore = myscore + calculateScore(remainingCustomers, remainingProducts);
+                if(score < curScore) {
+                    score = curScore;
+                }
+            }
         }
-    }  
-
-    // swap the String at indices i and j
-    private static void swap(int[] a, int i, int j) {
-        int s;
-        s = a[i]; a[i] = a[j]; a[j] = s;
-    }
-
+        
+        memoized.put(set.toString(), score);
+        
+        return score;
+	}
 
 	Float calculateScoreForOne(String customer, String product) {
 		
@@ -329,7 +110,7 @@ public class discount_offers {
 		
 		String c = cleanString(customer);
 		String p = cleanString(product);
-		
+
 		if(isEven(p)) {
 			
 			score = Float.valueOf(noOfVowels(c) * 1.5f);
@@ -397,7 +178,7 @@ public class discount_offers {
 	}
 
 	String cleanString(String string) {
-		return string.replaceAll("[ ',\\.\\\\\\&0-9]", "");
+		return string.replaceAll("[ \\-',\\.\\\\\\&0-9]", "");
 	}
 	
 	Map<String, List<String>> splitRecord(String line) {

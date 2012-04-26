@@ -8,6 +8,66 @@ import org.junit.Test;
 
 public class TestDiscount_offers {
 
+    @Test
+    public void test1() {
+
+        String test = "Jack Abraham,John Evans,Ted Dziuba;iPad 2 - 4-pack,Girl Scouts Thin Mints,Nerf Crossbow";
+
+        discount_offers d = new discount_offers();
+
+        Map<String, List<String>> res = d.splitRecord(test);
+
+        float score = d.calculateScore(res.get("customers"), res.get("products"));
+
+        assertEquals(21.0f, score);
+
+    }
+
+    @Test
+    public void test2() {
+
+        String test = "Jeffery Lebowski,Walter Sobchak,Theodore Donald Kerabatsos,Peter Gibbons,Michael Bolton,Samir Nagheenanajar;Half & Half,Colt M1911A1,16lb bowling ball,Red Swingline Stapler,Printer paper,Vibe Magazine Subscriptions - 40 pack";
+
+        discount_offers d = new discount_offers();
+
+        Map<String, List<String>> res = d.splitRecord(test);
+
+        float score = d.calculateScore(res.get("customers"), res.get("products"));
+
+        assertEquals(83.50f, score);
+
+    }
+
+    @Test
+    public void test3() {
+
+        String test = "Jareau Wade,Rob Eroh,Mahmoud Abdelkader,Wenyi Cai,Justin Van Winkle,Gabriel Sinkin,Aaron Adelson;Batman No. 1,Football - Official Size,Bass Amplifying Headphones,Elephant food - 1024 lbs,Three Wolf One Moon T-shirt,Dom Perignon 2000 Vintage";
+
+        discount_offers d = new discount_offers();
+
+        Map<String, List<String>> res = d.splitRecord(test);
+
+        float score = d.calculateScore(res.get("customers"), res.get("products"));
+
+        assertEquals(71.25f, score);
+
+    }
+    
+    @Test
+    public void test4() {
+
+        String test = "Jeffery Lebowski,Walter Sobchak,Theodore Donald Kerabatsos,Jack Abraham,John Evans,Ted Dziuba,Jareau Wade,Rob Eroh,Mahmoud Abdelkader,Wenyi Cai,Justin Van Winkle,Gabriel Sinkin,Aaron Adelson,Peter Gibbons,Michael Bolton,Samir Nagheenanajar;Half & Half,Colt M1911A1,16lb Bowling ball,iPad 2 - 4-pack,Girl Scouts Thin Mints,Nerf Crossbow,Batman No. 1,Football - Official Size,Bass Amplifying Headphones,Elephant food - 1024 lbs,Three Wolf One Moon T-shirt,Dom Perignon 2000 Vintage,Widescreen Monitor - 30-inch,Red Swingline Stapler,Printer paper,Vibe Magazine Subscriptions - 40 pack";
+
+        discount_offers d = new discount_offers();
+
+        Map<String, List<String>> res = d.splitRecord(test);
+
+        float score = d.calculateScore(res.get("customers"), res.get("products"));
+
+        assertEquals(71.25f, score);
+
+    }
+
 	@Test
 	public void testSplitRecord() {
 		
@@ -16,7 +76,7 @@ public class TestDiscount_offers {
 		discount_offers d = new discount_offers();
 		
 		Map<String, List<String>> res = d.splitRecord(test);
-		
+
 		assertTrue(res.containsKey("customers"));
 		assertTrue(res.containsKey("products"));
 		
@@ -66,7 +126,7 @@ public class TestDiscount_offers {
 		customers = data.get("customers");
 		products = data.get("products");
 		
-		assertEquals(41.5f, d.calculateScore(customers, products));
+		assertEquals(43.5f, d.calculateScore(customers, products));
 	}
 	
 	@Test
@@ -74,6 +134,8 @@ public class TestDiscount_offers {
 		discount_offers d = new discount_offers();
 		
 		assertEquals("abcdef", d.cleanString("a b,c'd e\\f"));
+		
+		assertEquals("abasf", d.cleanString("ab - asf\\"));
 	}
 	
 	@Test
@@ -82,6 +144,7 @@ public class TestDiscount_offers {
 		
 		assertEquals(5, d.noOfVowels("apepipOmU"));
 		assertEquals(4, d.noOfVowels("GA IpipOm"));
+		assertEquals(7, d.noOfVowels("You ARE CRAZY"));
 	}
 	
 	@Test
@@ -89,7 +152,7 @@ public class TestDiscount_offers {
 		discount_offers d = new discount_offers();
 		
 		assertEquals(9, d.noOfConsonants("12casfdgdsgh"));
-		
+		assertEquals(10, d.noOfConsonants("12rgs sdagla casg"));
 	}
 	
 	@Test
