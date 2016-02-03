@@ -86,6 +86,14 @@ public class Main {
 				List<SkiPoint> possibleRoute = findRoute(skiGrid, point, new ArrayList<>(route));
 				if(possibleRoute.size() > maxRoute.size()) {
 					maxRoute = possibleRoute;
+				} else if(possibleRoute.size() == maxRoute.size()) {
+					
+					int curRouteDiff = possibleRoute.get(0).height - possibleRoute.get(possibleRoute.size() - 1).height; 
+					int maxRouteDiff = maxRoute.get(0).height - maxRoute.get(maxRoute.size() - 1).height;
+					
+					if(curRouteDiff > maxRouteDiff) {
+						maxRoute = possibleRoute;
+					}
 				}
 			}
 		}
